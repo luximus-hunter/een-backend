@@ -2,240 +2,31 @@ namespace Model;
 
 public class Processor
 {
+    #region Fields
+
     private readonly Game _game;
 
+    #endregion
+
+    #region Constructor
+
+    /// <summary>
+    /// Sets the <see cref="Game"/> to process
+    /// </summary>
+    /// <param name="game"><see cref="Game"/> to process</param>
     public Processor(Game game)
     {
         _game = game;
     }
 
-    public bool ValidateMove(Guid playerId, Move move)
-    {
-        bool valid;
+    #endregion
 
-        Player player = _game.Players.First(p => p.Id == playerId);
-        Card lastPlayed = _game.DiscardPile.Peek();
+    #region Private Methods
 
-        //TODO: Make this cleaner
-        switch (move)
-        {
-            // Player draws a card
-            case { Action: MoveAction.Draw, Card: null }:
-                Console.WriteLine("Player draws");
-                valid = true;
-                break;
-            // Player plays a card
-            case { Action: MoveAction.Play, Card: { } }:
-            {
-                Console.WriteLine("Player plays");
-                Console.WriteLine($"OLD: Color: {lastPlayed.Color}, Value: {lastPlayed.Value}");
-                Console.WriteLine($"NEW: Color: {move.Card.Color}, Value: {move.Card.Value}");
-
-                // Player has card
-                if (CheckPlayersHand(player, move.Card))
-                {
-                    Console.WriteLine("Player has card");
-
-                    // If player needs to draw a card
-                    if (_game.DrawBuffer > 0)
-                    {
-                        Console.WriteLine("There is a buffer");
-
-                        if (lastPlayed.Value == CardValue.Draw4)
-                        {
-                            Console.WriteLine("Last played card was a +4");
-                            // +2 not on +4
-                            valid = move.Card.Value == CardValue.Draw4;
-
-                            // +2 on +4 allowed
-                            // valid = move.Card.Value == CardValue.Draw4 || move.Card.Value == CardValue.Draw2;
-                        }
-                        else if (lastPlayed.Value == CardValue.Draw2)
-                        {
-                            Console.WriteLine("Last played card was a +2");
-
-                            valid = move.Card.Value == CardValue.Draw4 || move.Card.Value == CardValue.Draw2;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Player cant play and needs to draw");
-                            valid = false;
-                        }
-                    }
-                    // Special cards
-                    // And wild cuz wild can be all colors
-                    else if (move.Card.Value == CardValue.Wild || move.Card.Color == CardColor.Special)
-                    {
-                        Console.WriteLine("Player played Wild or a special");
-
-                        valid = true;
-                    }
-                    // Last played card was special
-                    else if (lastPlayed.Color == CardColor.Special)
-                    {
-                        Console.WriteLine("Last card was a special so anything is fine");
-
-                        valid = true;
-                    }
-                    // Normal cards
-                    else if (lastPlayed.Color == move.Card.Color || lastPlayed.Value == move.Card.Value)
-                    {
-                        Console.WriteLine("Player played a matching card");
-
-                        valid = true;
-                    }
-                    // Invalid card
-                    else
-                    {
-                        Console.WriteLine("Not a valid card to play");
-
-                        valid = false;
-                    }
-                }
-                // Player doesnt have card
-                else
-                {
-                    Console.WriteLine("Player doesnt have the card they say they have");
-
-                    valid = false;
-                }
-
-                break;
-            }
-            // Invalid action
-            default:
-                Console.WriteLine("Player did an invalid action");
-
-                valid = false;
-                break;
-        }
-
-        Console.WriteLine($"Valid: {valid}");
-
-        return valid;
-    }
-
-    private static bool CheckPlayersHand(Player player, Card card)
-    {
-        Console.WriteLine("Checking players hand");
-        Console.WriteLine("Player has:");
-
-        foreach (Card c in player.Cards)
-        {
-            Console.WriteLine($"Color: {c.Color}, Value: {c.Value}");
-        }
-
-        if (card.Value == CardValue.Wild)
-        {
-            return player.Cards.Any(c => c.Value == card.Value);
-        }
-
-        return player.Cards.Any(c => c.Value == card.Value && c.Color == card.Color);
-    }
-
-    public void ExecuteMove(Guid playerId, Move move)
-    {
-        Player player = _game.Players.First(p => p.Id == playerId);
-
-        switch (move)
-        {
-            // Player draws a card
-            case { Action: MoveAction.Draw, Card: null }:
-                if (_game.DrawBuffer > 0)
-                {
-                    DrawCards(player, _game.DrawBuffer);
-                    _game.DrawBuffer = 0;
-                }
-                else
-                {
-                    DrawCards(player, 1);
-                }
-
-                _game.NextPlayer();
-                _game.OnTurn = _game.Players.Peek().Id;
-                break;
-            // Player plays a card
-            case { Action: MoveAction.Play, Card: { } }:
-                Card lastPlayed = _game.DiscardPile.Peek();
-
-                if (move.Card.Color == lastPlayed.Color || move.Card.Value == lastPlayed.Value ||
-                    move.Card.Value == CardValue.Wild || move.Card.Color == CardColor.Special ||
-                    lastPlayed.Color == CardColor.Special)
-                {
-                    if (move.Card.Value == CardValue.Wild)
-                    {
-                        player.RemoveCard(move.Card.Value);
-                    }
-                    else
-                    {
-                        player.RemoveCard(move.Card);
-                    }
-
-                    _game.DiscardPile.Push(move.Card);
-
-                    switch (move.Card.Value)
-                    {
-                        case CardValue.Reverse:
-                            _game.ReversePlayers();
-                            if (_game.Players.Count == 2)
-                            {
-                                _game.NextPlayer();
-                            }
-
-                            break;
-                        case CardValue.Skip:
-                            _game.NextPlayer();
-                            _game.NextPlayer();
-                            break;
-                        case CardValue.Draw4:
-                            _game.DrawBuffer += 4;
-                            _game.NextPlayer();
-                            break;
-                        case CardValue.Draw2:
-                            _game.DrawBuffer += 2;
-                            _game.NextPlayer();
-                            break;
-                        case CardValue.Wild:
-                            _game.NextPlayer();
-                            break;
-                        default:
-                            _game.NextPlayer();
-                            break;
-                    }
-
-                    _game.OnTurn = _game.Players.Peek().Id;
-                }
-
-                break;
-        }
-    }
-
-    public void Setup()
-    {
-        // Reset piles
-        _game.DrawPile = Deck.New();
-        _game.DiscardPile = new Stack<Card>();
-        _game.DrawBuffer = 0;
-
-        // Give each player 7 cards
-        foreach (Player player in _game.Players)
-        {
-            player.Cards = new List<Card>();
-            while (player.Cards.Count < 7)
-            {
-                player.Cards.Add(_game.DrawPile.Dequeue());
-            }
-        }
-
-        // Place first card in discard pile
-        _game.DiscardPile.Push(_game.DrawPile.Dequeue());
-
-        // Randomise player order
-        _game.ShufflePlayers();
-        _game.OnTurn = _game.Players.Peek().Id;
-    }
-
-    public void RestockDrawPile()
+    /// <summary>
+    /// Places all cards from the discardpile, except the top card, back into the drawpile and shuffles them
+    /// </summary>
+    private void RestockDrawPile()
     {
         Card top = _game.DiscardPile.Pop();
 
@@ -256,15 +47,15 @@ public class Processor
     }
 
     /// <summary>
-    /// 
+    /// Adds the specified amount of cards to the specified player.
     /// </summary>
     /// <param name="player"><see cref="Player"/> that the cards will be added to.</param>
     /// <param name="amount">Amount of cards that need to be drawn.</param>
-    public void DrawCards(Player player, int amount)
+    private void DrawCards(Player player, int amount)
     {
         for (int i = 0; i < amount; i++)
         {
-            player.Cards.Add(_game.DrawPile.Dequeue());
+            player.AddCard(_game.DrawPile.Dequeue());
 
             if (_game.DrawPile.Count < 1)
             {
@@ -272,4 +63,220 @@ public class Processor
             }
         }
     }
+
+    /// <summary>
+    /// Moves the current player to the last space in the player list.
+    /// </summary>
+    private void NextPlayer()
+    {
+        _game.Players.Enqueue(_game.Players.Dequeue());
+    }
+
+    /// <summary>
+    /// Reverses the player list.
+    /// </summary>
+    private void ReversePlayers()
+    {
+        _game.Players = new Queue<Player>(_game.Players.Reverse());
+    }
+
+    /// <summary>
+    /// Randomizes the player order.
+    /// </summary>
+    private void ShufflePlayers()
+    {
+        _game.Players = new Queue<Player>(_game.Players.OrderBy(_ => new Random().Next()));
+    }
+
+    #endregion
+
+    #region Public Methods
+
+    /// <summary>
+    /// Validates a <see cref="Move"/> done by the specified <see cref="Player"/>
+    /// </summary>
+    /// <param name="player"><see cref="Player"/> that makes the <see cref="Move"/></param>
+    /// <param name="move"><see cref="Move"/> that needs to be validated</param>
+    /// <returns><see cref="Boolean"/></returns>
+    //TODO: Make this cleaner
+    public bool Valid(Player player, Move move)
+    {
+        bool valid;
+
+        Card lastPlayed = _game.DiscardPile.Peek();
+
+        switch (move)
+        {
+            // Player draws a card
+            case { Action: MoveAction.Draw, Card: null }:
+                valid = true;
+                break;
+            // Player plays a card
+            case { Action: MoveAction.Play, Card: { } }:
+            {
+                // Player has card
+                if (player.HasCard(move.Card))
+                {
+                    // If player needs to draw a card
+                    if (_game.DrawBuffer > 0)
+                    {
+                        if (lastPlayed.Value == CardValue.Draw4)
+                        {
+                            // +2 not on +4
+                            valid = move.Card.Value == CardValue.Draw4;
+
+                            // +2 on +4 allowed
+                            // valid = move.Card.Value == CardValue.Draw4 || move.Card.Value == CardValue.Draw2;
+                        }
+                        else if (lastPlayed.Value == CardValue.Draw2)
+                        {
+                            valid = move.Card.Value == CardValue.Draw4 || move.Card.Value == CardValue.Draw2;
+                        }
+                        else
+                        {
+                            valid = false;
+                        }
+                    }
+                    // Special cards
+                    // And wild cuz wild can be all colors
+                    else if (move.Card.Value == CardValue.Wild || move.Card.Color == CardColor.Special)
+                    {
+                        valid = true;
+                    }
+                    // Last played card was special
+                    else if (lastPlayed.Color == CardColor.Special)
+                    {
+                        valid = true;
+                    }
+                    // Normal cards
+                    else if (lastPlayed.Color == move.Card.Color || lastPlayed.Value == move.Card.Value)
+                    {
+                        valid = true;
+                    }
+                    // Invalid card
+                    else
+                    {
+                        valid = false;
+                    }
+                }
+                // Player doesnt have card
+                else
+                {
+                    valid = false;
+                }
+
+                break;
+            }
+            // Invalid action
+            default:
+                valid = false;
+                break;
+        }
+
+        Console.WriteLine($"Valid: {valid}");
+
+        return valid;
+    }
+
+    /// <summary>
+    /// Processes a <see cref="Move"/> done by the specified <see cref="Player"/>
+    /// </summary>
+    /// <param name="player"><see cref="Player"/> that makes the <see cref="Move"/></param>
+    /// <param name="move"><see cref="Move"/> that needs to be executed</param>
+    public void Execute(Player player, Move move)
+    {
+        switch (move)
+        {
+            // Player draws a card
+            case { Action: MoveAction.Draw, Card: null }:
+                if (_game.DrawBuffer > 0)
+                {
+                    DrawCards(player, _game.DrawBuffer);
+                    _game.DrawBuffer = 0;
+                }
+                else
+                {
+                    DrawCards(player, 1);
+                }
+
+                NextPlayer();
+                _game.OnTurn = _game.Players.Peek().Id;
+                break;
+            // Player plays a card
+            case { Action: MoveAction.Play, Card: { } }:
+                Card lastPlayed = _game.DiscardPile.Peek();
+
+                if (move.Card.Color == lastPlayed.Color || move.Card.Value == lastPlayed.Value ||
+                    move.Card.Value == CardValue.Wild || move.Card.Color == CardColor.Special ||
+                    lastPlayed.Color == CardColor.Special)
+                {
+                    player.RemoveCard(move.Card);
+                    _game.DiscardPile.Push(move.Card);
+
+                    switch (move.Card.Value)
+                    {
+                        case CardValue.Reverse:
+                            ReversePlayers();
+                            if (_game.Players.Count == 2)
+                            {
+                                NextPlayer();
+                            }
+
+                            break;
+                        case CardValue.Skip:
+                            NextPlayer();
+                            NextPlayer();
+                            break;
+                        case CardValue.Draw4:
+                            _game.DrawBuffer += 4;
+                            NextPlayer();
+                            break;
+                        case CardValue.Draw2:
+                            _game.DrawBuffer += 2;
+                            NextPlayer();
+                            break;
+                        case CardValue.Wild:
+                            NextPlayer();
+                            break;
+                        default:
+                            NextPlayer();
+                            break;
+                    }
+
+                    _game.OnTurn = _game.Players.Peek().Id;
+                }
+
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Set up all players and piles.
+    /// </summary>
+    public void Setup()
+    {
+        // Reset piles
+        _game.DrawPile = Deck.New();
+        _game.DiscardPile = new Stack<Card>();
+        _game.DrawBuffer = 0;
+
+        // Give each player 7 cards
+        foreach (Player player in _game.Players)
+        {
+            player.Cards = new List<Card>();
+            while (player.Cards.Count < 7)
+            {
+                player.AddCard(_game.DrawPile.Dequeue());
+            }
+        }
+
+        // Place first card in discard pile
+        _game.DiscardPile.Push(_game.DrawPile.Dequeue());
+
+        // Randomise player order
+        ShufflePlayers();
+        _game.OnTurn = _game.Players.Peek().Id;
+    }
+
+    #endregion
 }

@@ -7,22 +7,29 @@ namespace Api.Hubs;
 
 public class GamesHub : Hub
 {
+    #region Private Methods
+
     /// <summary>
-    /// Returns the current group based on a Guid
+    /// Returns the current group based on a Guid.
     /// </summary>
     /// <param name="id"><see cref="Guid"/> of the group.</param>
-    /// <returns></returns>
+    /// <returns><see cref="IClientProxy"/></returns>
     private IClientProxy Group(Guid id) => Clients.Group(id.ToString());
 
     /// <summary>
     /// Returns the sender of the WebSocket request.
     /// </summary>
+    /// <returns><see cref="ISingleClientProxy"/></returns>
     private ISingleClientProxy Sender => Clients.Client(Context.ConnectionId);
 
+    #endregion
+
+    #region Public Methods
+
     /// <summary>
-    /// Takes in a move request sends responses back to the server accordingly.
+    /// Processes a <see cref="Move"/> being made.
     /// </summary>
-    /// <param name="data">Serialised JSON version of <see cref="MoveRequest"/></param>
+    /// <param name="data">Serialised JSON version of <see cref="MoveRequest"/>.</param>
     public async Task Move(string data)
     {
         MoveRequest? r = JsonConvert.DeserializeObject<MoveRequest>(data);
@@ -50,12 +57,14 @@ public class GamesHub : Hub
             return;
         }
 
-        if (game.Processor.ValidateMove(r.PlayerId, r.Move))
+        Player player = game.GetPlayer(r.PlayerId);
+
+        if (game.Processor.Valid(player, r.Move))
         {
-            game.Processor.ExecuteMove(r.PlayerId, r.Move);
+            game.Processor.Execute(player, r.Move);
+
             if (game.Players.First(p => p.Id == r.PlayerId).Cards.Count < 1)
             {
-                await Group(r.GameId).SendAsync("Move", new MoveResponse(true, "Success", game).ToString());
                 await Group(r.GameId).SendAsync("Win", new SocketResponse(true, "Success").ToString());
             }
         }
@@ -69,9 +78,9 @@ public class GamesHub : Hub
     }
 
     /// <summary> 
-    /// Takes in a join request sends responses back to the server accordingly.
+    /// Processes a <see cref="Player"/> joining a <see cref="Game"/>.
     /// </summary>
-    /// <param name="data">Serialised JSON version of <see cref="JoinRequest"/></param>
+    /// <param name="data">Serialised JSON version of <see cref="JoinRequest"/>.</param>
     public async Task Join(string data)
     {
         // Convert json to object
@@ -112,6 +121,10 @@ public class GamesHub : Hub
                 new JoinResponse(true, $"{r.PlayerId} has joined the group {game.Id}.", game.Players).ToString());
     }
 
+    /// <summary>
+    /// Processes a <see cref="Game"/> being started.
+    /// </summary>
+    /// <param name="data">Serialised JSON version of <see cref="GameRequest"/>.</param>
     public async Task Start(string data)
     {
         GameRequest? request = JsonConvert.DeserializeObject<GameRequest>(data);
@@ -136,4 +149,6 @@ public class GamesHub : Hub
 
         await Group(game.Id).SendAsync("Start", new MoveResponse(true, $"Game {game.Id} has started", game).ToString());
     }
+
+    #endregion
 }

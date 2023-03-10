@@ -3,10 +3,17 @@ using Newtonsoft.Json;
 namespace Api.Model;
 
 public class SocketResponse
-{
+{   
+    #region Properties
+
     public string Message { get; set; }
 
     public bool Success { get; set; }
+    
+
+    #endregion
+
+    #region Constructor
 
     public SocketResponse(bool success, string message)
     {
@@ -14,8 +21,18 @@ public class SocketResponse
         Message = message;
     }
 
+    #endregion
+
+    #region Public Methods
+
+    
     public override string ToString()
     {
         return JsonConvert.SerializeObject(this);
     }
+    #endregion
+
+
+
+
 }

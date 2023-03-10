@@ -4,8 +4,10 @@ namespace Model;
 
 public class Game
 {
-    public bool Running { get; set; }
+    #region Properties
+
     public Guid Id { get; }
+    public bool Running { get; set; }
     public Guid OnTurn { get; set; }
     public string Password { get; }
     public int MaxPlayers { get; }
@@ -13,28 +15,27 @@ public class Game
     public Queue<Card> DrawPile { get; set; }
     public Stack<Card> DiscardPile { get; set; }
     public int DrawBuffer { get; set; }
-
     public readonly Processor Processor;
 
-    public Game(Guid id, string password, int maxPlayers) : this(password, maxPlayers)
-    {
-        Id = id;
-    }
+    #endregion
+
+    #region Constructor
 
     public Game(string password, int maxPlayers)
     {
         Id = Guid.NewGuid();
         Password = HashPassword(password);
         MaxPlayers = maxPlayers;
+        DrawPile = new Queue<Card>();
+        DiscardPile = new Stack<Card>();
         Players = new Queue<Player>(MaxPlayers);
         DrawBuffer = 0;
         Processor = new Processor(this);
     }
 
-    public bool CheckPassword(string password)
-    {
-        return Verify(password, Password);
-    }
+    #endregion
+
+    #region Public Methods
 
     public void Start()
     {
@@ -42,28 +43,11 @@ public class Game
         Processor.Setup();
     }
 
-    public void NextPlayer()
-    {
-        Players.Enqueue(Players.Dequeue());
-    }
+    public bool CheckPassword(string password) => Verify(password, Password);
 
-    public void ReversePlayers()
-    {
-        Players = new Queue<Player>(Players.Reverse());
-    }
+    public bool HasPlayer(Guid id) => Players.Any(player => player.Id == id);
 
-    public void ShufflePlayers()
-    {
-        Players = new Queue<Player>(Players.OrderBy(_ => new Random().Next()));
-    }
+    public Player GetPlayer(Guid id) => Players.First(p => p.Id == id);
 
-    public bool HasPlayer(Guid id)
-    {
-        return Players.Any(player => player.Id == id);
-    }
-
-    public Player GetPlayer(Guid id)
-    {
-        return Players.First(player => player.Id == id);
-    }
+    #endregion
 }

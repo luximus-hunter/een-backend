@@ -4,14 +4,18 @@ namespace Api.Model;
 
 public class MoveResponse : SocketResponse
 {
+    #region Properties
+
     public Game? Game { get; }
 
-    public MoveResponse(bool success, string message) : base(success, message)
-    {
-    }
+    #endregion
+
+    #region Constructor
 
     public MoveResponse(bool success, string message, Game? game = null) : base(success, message)
     {
         Game = game;
     }
+
+    #endregion
 }

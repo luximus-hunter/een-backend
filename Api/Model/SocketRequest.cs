@@ -2,10 +2,18 @@ namespace Api.Model;
 
 public class SocketRequest : GameRequest
 {
-    public Guid PlayerId { get; set; }
+    #region Properties
+
+    public Guid PlayerId { get; }
+
+    #endregion
+
+    #region Constructor
 
     public SocketRequest(Guid gameId, Guid playerId) : base(gameId)
     {
         PlayerId = playerId;
     }
+
+    #endregion
 }

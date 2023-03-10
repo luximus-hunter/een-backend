@@ -2,8 +2,14 @@ namespace Model;
 
 public class Card
 {
+    #region Properties
+
     public CardColor Color { get; set; }
     public CardValue Value { get; }
+
+    #endregion
+
+    #region Constructor
 
     public Card(CardColor color, CardValue value)
     {
@@ -11,8 +17,5 @@ public class Card
         Value = value;
     }
 
-    public override string ToString()
-    {
-        return $"{Color} card with value {Value}";
-    }
+    #endregion
 }

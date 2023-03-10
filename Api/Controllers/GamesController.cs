@@ -7,14 +7,29 @@ namespace Api.Controllers;
 [Route("games")]
 public class GamesController : ControllerBase
 {
+    #region Fields
+
     private readonly ILogger<GamesController> _logger;
-    private static string ErrorMessage(string message) => $"{{\"status\": false, \"message\": \"{message}\"}}";
+
+    #endregion
+
+    #region Constructor
 
     public GamesController(ILogger<GamesController> logger)
     {
         _logger = logger;
         _logger.Log(LogLevel.Information, @"Games route created");
     }
+
+    #endregion
+
+    #region Private Methods
+
+    private static string ErrorMessage(string message) => $"{{\"status\": false, \"message\": \"{message}\"}}";
+
+    #endregion
+
+    #region Public Methods
 
     /// <summary>
     /// Creates a game with the provided properties. Also adds the player that created it.
@@ -70,4 +85,6 @@ public class GamesController : ControllerBase
         game.Players.Enqueue(player);
         return Ok(player);
     }
+
+    #endregion
 }

@@ -4,8 +4,19 @@ namespace Api;
 
 public static class GamesManager
 {
-    public const int MaxPlayers = 4;
+    #region Fields
+
     private static Dictionary<Guid, Game> Games { get; } = new();
+
+    #endregion
+
+    #region Properties
+
+    public const int MaxPlayers = 4;
+
+    #endregion
+
+    #region Public Methods
 
     /// <summary>
     /// Creates a game with the provided properties.
@@ -35,4 +46,6 @@ public static class GamesManager
     /// <param name="id"><see cref="Guid"/> of game to check.</param>
     /// <returns>Returns the found game or null if it's not found.</returns>
     public static Game? Find(Guid id) => Exists(id) ? Games[id] : null;
+
+    #endregion
 }
