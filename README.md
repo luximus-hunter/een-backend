@@ -6,7 +6,7 @@ This is the backend for EEN, an UNO clone.
 
 ## Developing
 
-Open the solution and run the ISS Server profile to run the server
+Open the solution and run the IIS Server profile to run the server
 
 ## Building
 
