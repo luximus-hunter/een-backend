@@ -63,9 +63,10 @@ public class GamesHub : Hub
         {
             game.Processor.Execute(player, r.Move);
 
-            if (game.Players.First(p => p.Id == r.PlayerId).Cards.Count < 1)
+            if (game.Players.Any(p => p.Cards.Count < 1))
             {
-                await Group(r.GameId).SendAsync("Win", new SocketResponse(true, "Success").ToString());
+                await Group(r.GameId).SendAsync("Win",
+                    new WinResponse(true, "Success", game.Players.First(p => p.Cards.Count < 1)).ToString());
             }
         }
         else
