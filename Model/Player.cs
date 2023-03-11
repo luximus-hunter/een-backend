@@ -52,14 +52,14 @@ public class Player
     /// <param name="card"><see cref="Card"/> to remove.</param>
     public void RemoveCard(Card card)
     {
-        Card c = Cards.First(c => c.Color == card.Color && c.Value == card.Value);
-
         if (card.Value == CardValue.Wild)
         {
-            c = Cards.First(c => c.Value == card.Value);
+            Cards.Remove(Cards.First(c => c.Value == card.Value));
         }
-
-        Cards.Remove(c);
+        else
+        {
+            Cards.Remove(Cards.First(c => c.Color == card.Color && c.Value == card.Value));
+        }
     }
 
     #endregion
