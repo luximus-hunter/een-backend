@@ -21,6 +21,6 @@ RUN dotnet publish -c Release --no-build  -o /app
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 as runtime
 WORKDIR /app
 COPY --from=publish /app .
-ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_URLS=http://localhost:5000
 EXPOSE 5000
 ENTRYPOINT ["dotnet", "Api.dll"]
