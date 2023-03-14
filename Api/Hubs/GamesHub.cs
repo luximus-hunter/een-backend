@@ -7,6 +7,21 @@ namespace Api.Hubs;
 
 public class GamesHub : Hub
 {
+    #region Fields
+
+    private Dictionary<string, Guid> _players;
+
+    #endregion
+
+    #region Constructor
+
+    public GamesHub()
+    {
+        _players = new Dictionary<string, Guid>();
+    }
+
+    #endregion
+    
     #region Private Methods
 
     /// <summary>
@@ -36,7 +51,7 @@ public class GamesHub : Hub
 
         if (r == null)
         {
-            await Sender.SendAsync("Err", new MoveResponse(false, "The send request is invalid").ToString());
+            await Sender.SendAsync("Err", new MoveResponse(false, "The send request is invalid.").ToString());
             return;
         }
 
@@ -45,19 +60,27 @@ public class GamesHub : Hub
         if (!GamesManager.Exists(r.GameId) || game == null)
         {
             await Sender.SendAsync("Err",
-                new MoveResponse(false, "The game you're looking for doesn't exist").ToString());
+                new MoveResponse(false, "The game you're looking for doesn't exist.").ToString());
             return;
         }
 
         if (!game.HasPlayer(r.PlayerId))
         {
             await Sender.SendAsync("Err",
-                new MoveResponse(false, "The player ID you entered doesn't exist in the game you're looking in")
+                new MoveResponse(false, "The player ID you entered doesn't exist in the game you're looking in.")
                     .ToString());
             return;
         }
 
         Player player = game.GetPlayer(r.PlayerId);
+
+        if (_players[Context.ConnectionId] != player.Id)
+        {
+            await Sender.SendAsync("Err",
+                new MoveResponse(false, "You committed identity fraud.")
+                    .ToString());
+            return;
+        }
 
         if (game.Processor.Valid(player, r.Move))
         {
@@ -65,13 +88,14 @@ public class GamesHub : Hub
 
             if (game.Players.Any(p => p.Cards.Count < 1))
             {
+                game.Running = false;
                 await Group(r.GameId).SendAsync("Win",
                     new WinResponse(true, "Success", game.Players.First(p => p.Cards.Count < 1)).ToString());
             }
         }
         else
         {
-            await Sender.SendAsync("Err", new MoveResponse(false, "The move you played was invalid").ToString());
+            await Sender.SendAsync("Err", new MoveResponse(false, "The move you played was invalid.").ToString());
             return;
         }
 
@@ -90,7 +114,7 @@ public class GamesHub : Hub
         // Check if object is valid
         if (r == null)
         {
-            await Sender.SendAsync("Err", new SocketResponse(false, "The send request is invalid").ToString());
+            await Sender.SendAsync("Err", new SocketResponse(false, "The send request is invalid.").ToString());
             return;
         }
 
@@ -100,7 +124,7 @@ public class GamesHub : Hub
         if (game == null)
         {
             await Sender.SendAsync("Err",
-                new SocketResponse(false, "The game you're looking for doesn't exist").ToString());
+                new SocketResponse(false, "The game you're looking for doesn't exist.").ToString());
             return;
         }
 
@@ -108,10 +132,15 @@ public class GamesHub : Hub
         if (!game.HasPlayer(r.PlayerId))
         {
             await Sender.SendAsync("Err",
-                new SocketResponse(false, "The player ID you entered doesn't exist in the game you're looking in")
+                new SocketResponse(false, "The player ID you entered doesn't exist in the game you're looking in.")
                     .ToString());
             return;
         }
+        
+        Player player = game.GetPlayer(r.PlayerId);
+        
+        // Link player to connection id
+        _players.Add(Context.ConnectionId, player.Id);
 
         // Prevent duplicates
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, r.GameId.ToString());
@@ -119,7 +148,7 @@ public class GamesHub : Hub
 
         await Group(game.Id)
             .SendAsync("Join",
-                new JoinResponse(true, $"{r.PlayerId} has joined the group {game.Id}.", game.Players).ToString());
+                new JoinResponse(true, $"{player.Id} has joined group {game.Id}.", game.Players).ToString());
     }
 
     /// <summary>
@@ -132,7 +161,7 @@ public class GamesHub : Hub
 
         if (request == null)
         {
-            await Sender.SendAsync("Err", new SocketResponse(false, "The send request is invalid").ToString());
+            await Sender.SendAsync("Err", new SocketResponse(false, "The send request is invalid.").ToString());
             return;
         }
 
@@ -142,13 +171,13 @@ public class GamesHub : Hub
         {
             await Sender.SendAsync("Err",
                 new SocketResponse(false,
-                    "The game you're looking for doesn't existThe game you're looking for doesn't exist").ToString());
+                    "The game you're looking for doesn't existThe game you're looking for doesn't exist.").ToString());
             return;
         }
 
         game.Start();
 
-        await Group(game.Id).SendAsync("Start", new MoveResponse(true, $"Game {game.Id} has started", game).ToString());
+        await Group(game.Id).SendAsync("Start", new MoveResponse(true, $"Game {game.Id} has started.", game).ToString());
     }
 
     #endregion
