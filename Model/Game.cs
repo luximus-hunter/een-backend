@@ -49,5 +49,13 @@ public class Game
 
     public Player GetPlayer(Guid id) => Players.First(p => p.Id == id);
 
+    public void RemovePlayer(Guid id)
+    {
+        List<Player> list = new();
+        list.AddRange(Players);
+        list.Remove(list.First(p => p.Id == id));
+        Players = new Queue<Player>(list);
+    }
+
     #endregion
 }

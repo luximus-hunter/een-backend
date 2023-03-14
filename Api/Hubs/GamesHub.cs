@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Api.Model;
 using Microsoft.AspNetCore.SignalR;
 using Model;
@@ -9,19 +10,10 @@ public class GamesHub : Hub
 {
     #region Fields
 
-    private Dictionary<string, Guid> _players;
+    private static Dictionary<string, Guid> _players = new();
 
     #endregion
 
-    #region Constructor
-
-    public GamesHub()
-    {
-        _players = new Dictionary<string, Guid>();
-    }
-
-    #endregion
-    
     #region Private Methods
 
     /// <summary>
@@ -40,6 +32,21 @@ public class GamesHub : Hub
     #endregion
 
     #region Public Methods
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        string connection = Context.ConnectionId;
+        Guid playerId = _players[connection];
+        Game? game = GamesManager.FindByPlayerId(playerId);
+
+        if (game == null) return Task.FromCanceled(CancellationToken.None);
+        
+        game.RemovePlayer(playerId);
+        
+        GamesManager.Purge();
+
+        return Task.CompletedTask;
+    }
 
     /// <summary>
     /// Processes a <see cref="Move"/> being made.
@@ -74,7 +81,7 @@ public class GamesHub : Hub
 
         Player player = game.GetPlayer(r.PlayerId);
 
-        if (_players.ContainsKey(Context.ConnectionId) && _players[Context.ConnectionId] != player.Id)
+        if (_players.TryGetValue(Context.ConnectionId, out Guid value) && value != player.Id)
         {
             await Sender.SendAsync("Err",
                 new MoveResponse(false, "You committed identity fraud.")
@@ -136,9 +143,9 @@ public class GamesHub : Hub
                     .ToString());
             return;
         }
-        
+
         Player player = game.GetPlayer(r.PlayerId);
-        
+
         // Link player to connection id
         _players.Add(Context.ConnectionId, player.Id);
 
@@ -177,7 +184,8 @@ public class GamesHub : Hub
 
         game.Start();
 
-        await Group(game.Id).SendAsync("Start", new MoveResponse(true, $"Game {game.Id} has started.", game).ToString());
+        await Group(game.Id)
+            .SendAsync("Start", new MoveResponse(true, $"Game {game.Id} has started.", game).ToString());
     }
 
     #endregion

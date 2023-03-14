@@ -41,11 +41,42 @@ public static class GamesManager
     public static bool Exists(Guid id) => Games.ContainsKey(id);
 
     /// <summary>
-    /// Looks for a game based on a <see cref="Guid"/>.
+    /// Looks for a game based on a <see cref="Game"/> <see cref="Guid"/>.
     /// </summary>
     /// <param name="id"><see cref="Guid"/> of game to check.</param>
-    /// <returns>Returns the found game or null if it's not found.</returns>
+    /// <returns>Returns the found <see cref="Game"/> or null if it's not found.</returns>
     public static Game? Find(Guid id) => Exists(id) ? Games[id] : null;
+
+    /// <summary>
+    /// Looks for a game based on a <see cref="Player"/> <see cref="Guid"/>.
+    /// </summary>
+    /// <param name="id"><see cref="Guid"/> of the player to check</param>
+    /// <returns>Returns the found <see cref="Game"/> or null if it's not found.</returns>
+    public static Game? FindByPlayerId(Guid id) =>
+        Games.Select(entry => entry.Value).FirstOrDefault(g => g.Players.Any(p => p.Id == id));
+
+
+    /// <summary>
+    /// Deletes all games without players.
+    /// </summary>
+    public static void Purge()
+    {
+        int count = 0;
+
+        foreach ((Guid id, Game? game) in Games)
+        {
+            if (game.Players.Count < 1)
+            {
+                Games.Remove(id);
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            Console.WriteLine($"info: Purged {count} games");
+        }
+    }
 
     #endregion
 }
