@@ -74,7 +74,7 @@ public class GamesHub : Hub
 
         Player player = game.GetPlayer(r.PlayerId);
 
-        if (_players[Context.ConnectionId] != player.Id)
+        if (_players.ContainsKey(Context.ConnectionId) && _players[Context.ConnectionId] != player.Id)
         {
             await Sender.SendAsync("Err",
                 new MoveResponse(false, "You committed identity fraud.")
