@@ -40,7 +40,7 @@ public class GamesHub : Hub
         Guid playerId = _players[connection];
         Game? game = GamesManager.FindByPlayerId(playerId);
 
-        if (game == null) return Task.FromCanceled(CancellationToken.None);
+        if (game == null) return null;
         
         game.RemovePlayer(playerId);
         
