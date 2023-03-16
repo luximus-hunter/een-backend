@@ -14,7 +14,10 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("htto://localhost:3000", "http://localhost:5173")
+                .WithOrigins(
+                    "http://uno-frontend:3000", // Deployed container
+                    "http://localhost:5173" // Development environment
+                    )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
