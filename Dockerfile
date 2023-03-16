@@ -5,12 +5,8 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["Een.Api/Een.Api.csproj", "Een.Api/"]
-COPY ["Een.Logic/Een.Logic.csproj", "Een.Logic/"]
-COPY ["Een.Model/Een.Model.csproj", "Een.Model/"]
-COPY ["Een.Socket/Een.Socket.csproj", "Een.Socket/"]
+COPY . ./
 RUN dotnet restore "Een.Api/Een.Api.csproj"
-COPY . .
 WORKDIR "/src/Een.Api"
 RUN dotnet build "Een.Api.csproj" -c Release -o /app/build
 
