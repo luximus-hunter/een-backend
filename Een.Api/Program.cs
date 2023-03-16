@@ -36,4 +36,4 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GamesHub>("/games");
 
-app.Run();
+app.Run("http://::5000");
