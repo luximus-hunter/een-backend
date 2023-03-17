@@ -1,11 +1,13 @@
 using Een.Logic;
 using Een.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Een.Api.Controllers;
 
 [ApiController]
 [Route("games")]
+[AllowAnonymous]
 public class GamesController : ControllerBase
 {
     #region Fields

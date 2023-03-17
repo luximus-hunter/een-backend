@@ -1,18 +1,25 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Een.Model;
 
 public class Player
 {
     #region Properties
-
+    
     public Guid Id { get; }
-    public string Username { get; }
-    public string ProfileImage { get; }
-
+    public string Username { get; set; }
+    public string ProfileImage { get; set; }
+    [NotMapped]
     public List<Card> Cards { get; set; }
 
     #endregion
 
     #region Constructor
+
+    // For EFCore
+    protected Player()
+    {
+    }
     
     public Player(string username)
     {
