@@ -2,12 +2,13 @@ using Een.Data;
 using Een.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace Een.Api.Controllers;
 
 [AllowAnonymous]
 [ApiController]
-[Route("users")]
+[Route("users/{id:guid}")]
 public class UsersController : ControllerBase
 {
     #region Fields
@@ -29,15 +30,23 @@ public class UsersController : ControllerBase
     #region Private Methods
 
     private static string ErrorMessage(string message) => $"{{\"status\": false, \"message\": \"{message}\"}}";
+    private static bool Authenticated(HttpRequest r) => r.Headers["Authed"] != StringValues.Empty && bool.Parse(r.Headers["Authed"].ToString());
 
     #endregion
 
     #region Public Methods
 
-    [HttpGet("{id:guid}")]
+    [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(User))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Get(Guid id)
     {
+        if (!Authenticated(Request))
+        {
+            return Unauthorized(ErrorMessage("You need to be logged in to use this route"));
+        }
+        
         Database db = new();
 
         if (!db.Users.Any(u => u.Id == id))
@@ -50,12 +59,18 @@ public class UsersController : ControllerBase
         return Ok(user);
     }
 
-    [HttpPut("{id:guid}/profile-image")]
+    [HttpPut]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(User))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult PutProfileImage(Guid id, string profileImage)
     {
+        if (!Authenticated(Request))
+        {
+            return Unauthorized(ErrorMessage("You need to be logged in to use this route"));
+        }
+        
         Database db = new();
 
         if (false) //TODO: Check for integrity
@@ -74,57 +89,17 @@ public class UsersController : ControllerBase
         return Ok(dbUser);
     }
 
-    [HttpPut("{id:guid}/wins")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(User))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult PutWins(Guid id, int wins)
-    {
-        Database db = new();
-
-        if (false) //TODO: Check for integrity
-        {
-            return BadRequest(ErrorMessage("Profile image was invalid."));
-        }
-
-        if (!db.Users.Any(u => u.Id == id))
-        {
-            return NotFound(ErrorMessage("Specified user was not found"));
-        }
-
-        User dbUser = db.Users.First(u => u.Id == id);
-        dbUser.Wins = wins;
-
-        return Ok(dbUser);
-    }
-
-    [HttpPut("{id:guid}/loses")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(User))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult PutLoses(Guid id, int loses)
-    {
-        Database db = new();
-
-        if (false) //TODO: Check for integrity
-        {
-            return BadRequest(ErrorMessage("Profile image was invalid."));
-        }
-
-        if (!db.Users.Any(u => u.Id == id))
-        {
-            return NotFound(ErrorMessage("Specified user was not found"));
-        }
-
-        User dbUser = db.Users.First(u => u.Id == id);
-        dbUser.Loses = loses;
-
-        return Ok(dbUser);
-    }
-
-    [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id)
     {
+        if (!Authenticated(Request))
+        {
+            return Unauthorized(ErrorMessage("You need to be logged in to use this route"));
+        }
+        
         Database db = new();
         
         if (!db.Users.Any(u => u.Id == id))

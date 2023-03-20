@@ -1,5 +1,10 @@
+using System.Security.Cryptography.X509Certificates;
 using Een.Data;
 using Een.Model;
+using JWT;
+using JWT.Algorithms;
+using JWT.Builder;
+using JWT.Serializers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static BCrypt.Net.BCrypt;
@@ -34,24 +39,35 @@ public class AuthController : ControllerBase
     #endregion
 
     #region Public Methods
-    
+
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(User))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Login(string username, string password)
     {
         Database db = new();
 
-        if (!db.Users.Any(u => u.Username == username && u.Password == HashPassword(password)))
+        if (!db.Users.Any(u => u.Username == username))
         {
-            return NotFound(ErrorMessage("User with that password not found."));
+            return NotFound(ErrorMessage("Username and password combination not found."));
         }
 
-        User user = db.Users.First(u => u.Username == username && u.Password == HashPassword(password));
-        return Ok(user);
+        User user = db.Users.First(u => u.Username == username);
+
+        if (!Verify(password, user.Password))
+        {
+            return NotFound(ErrorMessage("Username and password combination not found."));
+        }
+
+        string? token = JwtBuilder.Create()
+            .WithAlgorithm(new NoneAlgorithm())
+            .AddClaim("user", user)
+            .Encode();
+
+        return Ok(token);
     }
 
-    [HttpPost]
+    [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult Register(string username, string password)
