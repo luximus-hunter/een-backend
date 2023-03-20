@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Een.Data\Een.Data.csproj" />
       <ProjectReference Include="..\Een.Logic\Een.Logic.csproj" />
       <ProjectReference Include="..\Een.Model\Een.Model.csproj" />
     </ItemGroup>

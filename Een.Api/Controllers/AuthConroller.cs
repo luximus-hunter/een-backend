@@ -1,4 +1,5 @@
 using System.Security.Cryptography.X509Certificates;
+using Een.Api.Responses;
 using Een.Data;
 using Een.Model;
 using JWT;
@@ -41,7 +42,7 @@ public class AuthController : ControllerBase
     #region Public Methods
 
     [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponse))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Login(string username, string password)
     {
@@ -64,7 +65,7 @@ public class AuthController : ControllerBase
             .AddClaim("user", user)
             .Encode();
 
-        return Ok(token);
+        return Ok(new LoginResponse(token, user));
     }
 
     [HttpPost("register")]
