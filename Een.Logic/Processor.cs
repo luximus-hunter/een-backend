@@ -175,8 +175,6 @@ public class Processor
                 break;
         }
 
-        Console.WriteLine($"Valid: {valid}");
-
         return valid;
     }
 
