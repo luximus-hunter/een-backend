@@ -71,6 +71,7 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public IActionResult Register(string username, string password)
     {
         Database db = new();
@@ -78,6 +79,11 @@ public class AuthController : ControllerBase
         if (false) //TODO: Check for integrity
         {
             return BadRequest(ErrorMessage("Username or password was invalid."));
+        }
+
+        if (db.Users.Any(u => u.Username == username))
+        {
+            return Conflict(ErrorMessage("Username is taken."));
         }
 
         User user = new(username, password);

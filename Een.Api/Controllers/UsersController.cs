@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Net;
 using Een.Data;
 using Een.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +24,7 @@ public class UsersController : ControllerBase
     public UsersController(ILogger<UsersController> logger)
     {
         _logger = logger;
-        _logger.Log(LogLevel.Information, @"Users route created");
+        _logger.Log(LogLevel.Information, @"Users route created.");
     }
 
     #endregion
@@ -30,7 +32,16 @@ public class UsersController : ControllerBase
     #region Private Methods
 
     private static string ErrorMessage(string message) => $"{{\"status\": false, \"message\": \"{message}\"}}";
-    private static bool Authenticated(HttpRequest r) => r.Headers["Authed"] != StringValues.Empty && bool.Parse(r.Headers["Authed"].ToString());
+
+    private static bool Authenticated(HttpRequest r) =>
+        r.Headers["Authed"] != StringValues.Empty && bool.Parse(r.Headers["Authed"].ToString());
+
+    private static bool IsUrl(string url)
+    {
+        Uri? uriResult;
+        return Uri.TryCreate(url, UriKind.Absolute, out uriResult) &&
+               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
 
     #endregion
 
@@ -44,14 +55,14 @@ public class UsersController : ControllerBase
     {
         if (!Authenticated(Request))
         {
-            return Unauthorized(ErrorMessage("You need to be logged in to use this route"));
+            return Unauthorized(ErrorMessage("You need to be logged in to use this route."));
         }
-        
+
         Database db = new();
 
         if (!db.Users.Any(u => u.Id == id))
         {
-            return NotFound(ErrorMessage("Specified user was not found"));
+            return NotFound(ErrorMessage("Specified user was not found."));
         }
 
         User user = db.Users.First(u => u.Id == id);
@@ -64,27 +75,28 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult PutProfileImage(Guid id, string profileImage)
+    public async Task<IActionResult> PutProfileImage(Guid id, string profileImage)
     {
         if (!Authenticated(Request))
         {
-            return Unauthorized(ErrorMessage("You need to be logged in to use this route"));
+            return Unauthorized(ErrorMessage("You need to be logged in to use this route."));
         }
-        
+
         Database db = new();
 
-        if (false) //TODO: Check for integrity
+        if (!IsUrl(profileImage))
         {
-            return BadRequest(ErrorMessage("Profile image was invalid."));
+            return BadRequest(ErrorMessage("URL is not an image."));
         }
 
         if (!db.Users.Any(u => u.Id == id))
         {
-            return NotFound(ErrorMessage("Specified user was not found"));
+            return NotFound(ErrorMessage("Specified user was not found."));
         }
 
         User dbUser = db.Users.First(u => u.Id == id);
         dbUser.ProfileImage = profileImage;
+        db.SaveChanges();
 
         return Ok(dbUser);
     }
@@ -97,14 +109,14 @@ public class UsersController : ControllerBase
     {
         if (!Authenticated(Request))
         {
-            return Unauthorized(ErrorMessage("You need to be logged in to use this route"));
+            return Unauthorized(ErrorMessage("You need to be logged in to use this route."));
         }
-        
+
         Database db = new();
-        
+
         if (!db.Users.Any(u => u.Id == id))
         {
-            return NotFound(ErrorMessage("Specified user was not found"));
+            return NotFound(ErrorMessage("Specified user was not found."));
         }
 
         User user = db.Users.First(u => u.Id == id);
