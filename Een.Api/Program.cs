@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
                 .WithOrigins(
                     "https://een.luximus.eu", // Linked URL
                     "https://uno-frontend", // Deployed container
-                    "http://localhost:5173" // Development environment
+                    "http://localhost:3000" // Development environment
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
