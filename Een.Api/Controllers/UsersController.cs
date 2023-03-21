@@ -75,7 +75,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> PutProfileImage(Guid id, string profileImage)
+    public IActionResult PutProfileImage(Guid id, string profileImage)
     {
         if (!Authenticated(Request))
         {
@@ -96,7 +96,7 @@ public class UsersController : ControllerBase
 
         User dbUser = db.Users.First(u => u.Id == id);
         dbUser.ProfileImage = profileImage;
-        db.SaveChanges();
+        db.SaveChangesAsync();
 
         return Ok(dbUser);
     }
