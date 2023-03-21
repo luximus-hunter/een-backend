@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Een.Model", "Een.Model\Een.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Een.Logic", "Een.Logic\Een.Logic.csproj", "{561D1734-C830-46B3-8AD5-FD1CD1FB3B4B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Een.Data", "Een.Data\Een.Data.csproj", "{6997D182-5A7C-4DCF-B091-7B54147283F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{561D1734-C830-46B3-8AD5-FD1CD1FB3B4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{561D1734-C830-46B3-8AD5-FD1CD1FB3B4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{561D1734-C830-46B3-8AD5-FD1CD1FB3B4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6997D182-5A7C-4DCF-B091-7B54147283F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6997D182-5A7C-4DCF-B091-7B54147283F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6997D182-5A7C-4DCF-B091-7B54147283F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6997D182-5A7C-4DCF-B091-7B54147283F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

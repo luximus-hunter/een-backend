@@ -1,11 +1,14 @@
+using Een.Data;
 using Een.Logic;
 using Een.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Een.Api.Controllers;
 
 [ApiController]
 [Route("games")]
+[AllowAnonymous]
 public class GamesController : ControllerBase
 {
     #region Fields
@@ -42,7 +45,7 @@ public class GamesController : ControllerBase
     /// <see cref="IActionResult"/> 
     /// <seealso cref="OkObjectResult"/>
     /// </returns>
-    [HttpPost("create")]
+    [HttpPost("create/guest")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Game))]
     public IActionResult Create(string password, int maxPlayers, string username)
     {
@@ -51,6 +54,22 @@ public class GamesController : ControllerBase
         Game game = GamesManager.New(password, maxPlayers);
 
         Player player = new(username);
+        game.Players.Enqueue(player);
+
+        return Ok(game);
+    }
+    
+    [HttpPost("create/user")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Game))]
+    public IActionResult Create(string password, int maxPlayers, Guid userId)
+    {
+        maxPlayers = Math.Clamp(maxPlayers, 2, GamesManager.MaxPlayers);
+
+        Game game = GamesManager.New(password, maxPlayers);
+
+        Database db = new();
+        Player player = db.Users.First(u => u.Id == userId);
+        
         game.Players.Enqueue(player);
 
         return Ok(game);
@@ -68,7 +87,7 @@ public class GamesController : ControllerBase
     /// <seealso cref="NotFoundObjectResult"/>
     /// <seealso cref="UnauthorizedObjectResult"/>
     /// </returns>
-    [HttpPost("join")]
+    [HttpPost("join/guest")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Player))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -82,6 +101,26 @@ public class GamesController : ControllerBase
         if (game.Players.Count >= game.MaxPlayers) return Unauthorized(ErrorMessage("Game is full."));
 
         Player player = new(username);
+
+        game.Players.Enqueue(player);
+        return Ok(player);
+    }
+    
+    [HttpPost("join/user")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Player))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult Join(Guid gameId, string password, Guid userId)
+    {
+        Game? game = GamesManager.Find(gameId);
+
+        if (game == null) return NotFound(ErrorMessage("Game not found."));
+        if (!game.CheckPassword(password)) return Unauthorized(ErrorMessage("Password incorrect."));
+        if (game.Running) return Unauthorized(ErrorMessage("Game is already active."));
+        if (game.Players.Count >= game.MaxPlayers) return Unauthorized(ErrorMessage("Game is full."));
+
+        Database db = new();
+        Player player = db.Users.First(u => u.Id == userId);
 
         game.Players.Enqueue(player);
         return Ok(player);

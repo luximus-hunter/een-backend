@@ -1,3 +1,4 @@
+using Een.Api.Middleware;
 using Een.Socket;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -18,7 +19,7 @@ builder.Services.AddCors(options =>
                     "https://een.luximus.eu", // Linked URL
                     "https://uno-frontend", // Deployed container
                     "http://localhost:5173" // Development environment
-                    )
+                )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -26,6 +27,8 @@ builder.Services.AddCors(options =>
 });
 
 WebApplication app = builder.Build();
+
+app.UseAuthMiddleware();
 
 app.UseSwagger();
 app.UseSwaggerUI();

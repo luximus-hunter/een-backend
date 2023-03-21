@@ -1,3 +1,4 @@
+using Een.Data;
 using Een.Logic;
 using Een.Model;
 using Een.Socket.Requests;
@@ -41,9 +42,9 @@ public class GamesHub : Hub
         Game? game = GamesManager.FindByPlayerId(playerId);
 
         if (game == null) return null;
-        
+
         game.RemovePlayer(playerId);
-        
+
         GamesManager.Purge();
 
         return Task.CompletedTask;
@@ -97,8 +98,36 @@ public class GamesHub : Hub
             if (game.Players.Any(p => p.Cards.Count < 1))
             {
                 game.Running = false;
+
+                Database db = new();
+
+                foreach (Player p in game.Players)
+                {
+                    try
+                    {
+                        User user = db.Users.First(u => u.Id == p.Id);
+
+                        if (p.Cards.Count < 1)
+                        {
+                            user.Wins++;
+                        }
+                        else
+                        {
+                            user.Loses++;
+                        }
+                    }
+                    catch
+                    {
+                        // user is a guest
+                    }
+                }
+
+                await db.SaveChangesAsync();
+
+                await Group(r.GameId).SendAsync("Move", new MoveResponse(true, "Success", game).ToString());
                 await Group(r.GameId).SendAsync("Win",
                     new WinResponse(true, "Success", game.Players.First(p => p.Cards.Count < 1)).ToString());
+                return;
             }
         }
         else
