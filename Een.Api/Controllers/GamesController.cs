@@ -47,8 +47,15 @@ public class GamesController : ControllerBase
     /// </returns>
     [HttpPost("create/guest")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Game))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Create(string password, int maxPlayers, string username)
     {
+        Database db = new();
+        if (db.Users.Any(u => u.Username == username))
+        {
+            return Unauthorized(ErrorMessage("Username is taken by someone with an account."));
+        }
+        
         maxPlayers = Math.Clamp(maxPlayers, 2, GamesManager.MaxPlayers);
 
         Game game = GamesManager.New(password, maxPlayers);
@@ -58,7 +65,7 @@ public class GamesController : ControllerBase
 
         return Ok(game);
     }
-    
+
     [HttpPost("create/user")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Game))]
     public IActionResult Create(string password, int maxPlayers, Guid userId)
@@ -69,7 +76,7 @@ public class GamesController : ControllerBase
 
         Database db = new();
         Player player = db.Users.First(u => u.Id == userId);
-        
+
         game.Players.Enqueue(player);
 
         return Ok(game);
@@ -100,12 +107,18 @@ public class GamesController : ControllerBase
         if (game.Running) return Unauthorized(ErrorMessage("Game is already active."));
         if (game.Players.Count >= game.MaxPlayers) return Unauthorized(ErrorMessage("Game is full."));
 
+        Database db = new();
+        if (db.Users.Any(u => u.Username == username))
+        {
+            return Unauthorized(ErrorMessage("Username is taken by someone with an account."));
+        }
+
         Player player = new(username);
 
         game.Players.Enqueue(player);
         return Ok(player);
     }
-    
+
     [HttpPost("join/user")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Player))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
