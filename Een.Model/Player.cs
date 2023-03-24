@@ -16,7 +16,7 @@ public class Player
 
     #region Constructor
 
-    // For EFCore
+    // For EFCore, never used
     protected Player()
     {
     }
@@ -45,12 +45,9 @@ public class Player
     /// <param name="card"><see cref="Card"/> to remove.</param>
     public bool HasCard(Card card)
     {
-        if (card.Value == CardValue.Wild)
-        {
-            return Cards.Any(c => c.Value == card.Value);
-        }
-
-        return Cards.Any(c => c.Value == card.Value && c.Color == card.Color);
+        return card.Value == CardValue.Wild
+            ? Cards.Any(c => c.Value == card.Value)
+            : Cards.Any(c => c.Value == card.Value && c.Color == card.Color);
     }
 
     /// <summary>
@@ -59,14 +56,9 @@ public class Player
     /// <param name="card"><see cref="Card"/> to remove.</param>
     public void RemoveCard(Card card)
     {
-        if (card.Value == CardValue.Wild)
-        {
-            Cards.Remove(Cards.First(c => c.Value == card.Value));
-        }
-        else
-        {
-            Cards.Remove(Cards.First(c => c.Color == card.Color && c.Value == card.Value));
-        }
+        Cards.Remove(card.Value == CardValue.Wild
+            ? Cards.First(c => c.Value == card.Value)
+            : Cards.First(c => c.Color == card.Color && c.Value == card.Value));
     }
 
     #endregion

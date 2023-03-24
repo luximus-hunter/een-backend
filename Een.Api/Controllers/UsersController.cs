@@ -24,7 +24,7 @@ public class UsersController : ControllerBase
     public UsersController(ILogger<UsersController> logger)
     {
         _logger = logger;
-        _logger.Log(LogLevel.Information, @"Users route created.");
+        _logger.Log(LogLevel.Information, "Users route created.");
     }
 
     #endregion

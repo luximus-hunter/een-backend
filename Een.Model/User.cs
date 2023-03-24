@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using static BCrypt.Net.BCrypt;
 
@@ -11,10 +10,11 @@ public class User : Player
     public int Wins { get; set; }
     public int Loses { get; set; }
 
-    // For EFCore
+    // For EFCore, never used
     public User()
-    {}
-    
+    {
+    }
+
     public User(string username, string password) : base(username)
     {
         Password = HashPassword(password);

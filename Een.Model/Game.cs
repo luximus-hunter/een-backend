@@ -29,6 +29,8 @@ public class Game
         DiscardPile = new Stack<Card>();
         Players = new Queue<Player>(MaxPlayers);
         DrawBuffer = 0;
+        Running = false;
+        OnTurn = Guid.Empty;
     }
 
     #endregion
