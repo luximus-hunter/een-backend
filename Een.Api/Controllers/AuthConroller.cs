@@ -46,20 +46,19 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Login(string username, string password)
     {
-        Database db = new();
+        User? user = Users.Get(username);
 
-        if (!db.Users.Any(u => u.Username == username))
+        if (user == null)
         {
             return NotFound(ErrorMessage("Username and password combination not found."));
         }
-
-        User user = db.Users.First(u => u.Username == username);
 
         if (!Verify(password, user.Password))
         {
             return NotFound(ErrorMessage("Username and password combination not found."));
         }
 
+        // TODO: Validation?
         string? token = JwtBuilder.Create()
             .WithAlgorithm(new NoneAlgorithm())
             .AddClaim("user", user)
@@ -74,22 +73,12 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public IActionResult Register(string username, string password)
     {
-        Database db = new();
-
-        if (false) //TODO: Check for integrity
-        {
-            return BadRequest(ErrorMessage("Username or password was invalid."));
-        }
-
-        if (db.Users.Any(u => u.Username == username))
+        if (Users.Get(username) != null)
         {
             return Conflict(ErrorMessage("Username is taken."));
         }
 
-        User user = new(username, password);
-
-        db.Users.Add(user);
-        db.SaveChanges();
+        Users.Add(new User(username, password));
 
         return Ok();
     }

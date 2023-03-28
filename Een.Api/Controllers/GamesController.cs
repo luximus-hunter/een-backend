@@ -50,8 +50,7 @@ public class GamesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Create(string password, int maxPlayers, string username)
     {
-        Database db = new();
-        if (db.Users.Any(u => u.Username == username))
+        if (Users.Get(username) != null)
         {
             return Unauthorized(ErrorMessage("Username is taken by someone with an account."));
         }
@@ -60,24 +59,28 @@ public class GamesController : ControllerBase
 
         Game game = GamesManager.New(password, maxPlayers);
 
-        Player player = new(username);
-        game.Players.Enqueue(player);
+        game.Players.Enqueue(new Player(username));
 
         return Ok(game);
     }
 
     [HttpPost("create/user")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Game))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult Create(string password, int maxPlayers, Guid userId)
     {
         maxPlayers = Math.Clamp(maxPlayers, 2, GamesManager.MaxPlayers);
 
         Game game = GamesManager.New(password, maxPlayers);
 
-        Database db = new();
-        Player player = db.Users.First(u => u.Id == userId);
+        Player? user = Users.Get(userId);
 
-        game.Players.Enqueue(player);
+        if (user == null)
+        {
+            return NotFound(ErrorMessage("User not found."));
+        }
+
+        game.Players.Enqueue(user);
 
         return Ok(game);
     }
@@ -107,8 +110,7 @@ public class GamesController : ControllerBase
         if (game.Running) return Unauthorized(ErrorMessage("Game is already active."));
         if (game.Players.Count >= game.MaxPlayers) return Unauthorized(ErrorMessage("Game is full."));
 
-        Database db = new();
-        if (db.Users.Any(u => u.Username == username))
+        if (Users.Get(username) != null)
         {
             return Unauthorized(ErrorMessage("Username is taken by someone with an account."));
         }
@@ -132,11 +134,12 @@ public class GamesController : ControllerBase
         if (game.Running) return Unauthorized(ErrorMessage("Game is already active."));
         if (game.Players.Count >= game.MaxPlayers) return Unauthorized(ErrorMessage("Game is full."));
 
-        Database db = new();
-        Player player = db.Users.First(u => u.Id == userId);
+        Player? user = Users.Get(userId);
 
-        game.Players.Enqueue(player);
-        return Ok(player);
+        if (user == null) return Unauthorized(ErrorMessage("Username is taken."));
+
+        game.Players.Enqueue(user);
+        return Ok(user);
     }
 
     #endregion
