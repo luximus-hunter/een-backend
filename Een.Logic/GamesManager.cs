@@ -6,8 +6,8 @@ public static class GamesManager
 {
     #region Fields
 
-    private static Dictionary<Guid, Game> Games { get; } = new();
-    private static Dictionary<Guid, Processor> Processors { get; } = new();
+    public static Dictionary<Guid, Game> Games { get; } = new();
+    public static Dictionary<Guid, Processor> Processors { get; } = new();
 
     #endregion
 
@@ -57,14 +57,24 @@ public static class GamesManager
     public static Game? FindByPlayerId(Guid id) =>
         Games.Select(entry => entry.Value).FirstOrDefault(g => g.Players.Any(p => p.Id == id));
 
-    // public static Processor Processor(Game game) => Processor(game.Id);
-
     /// <summary>
     /// Gets the <see cref="Processor"/> for a <see cref="Game"/>
     /// </summary>
     /// <param name="id"><see cref="Guid"/> of <see cref="Game"/> to find who's <see cref="Processor"/></param>
     /// <returns><see cref="Processor"/> of game</returns>
     public static Processor Processor(Guid id) => Processors[id];
+
+    /// <summary>
+    /// Deletes all games. Used for testing
+    /// </summary>
+    public static void Empty()
+    {
+        foreach ((Guid id, Game? _) in Games)
+        {
+            Games.Remove(id);
+            Processors.Remove(id);
+        }
+    }
 
     /// <summary>
     /// Deletes all games without players.

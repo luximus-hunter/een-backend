@@ -28,7 +28,7 @@ public class Processor
     /// <summary>
     /// Places all cards from the discardpile, except the top card, back into the drawpile and shuffles them
     /// </summary>
-    private void RestockDrawPile()
+    public void RestockDrawPile()
     {
         Card top = _game.DiscardPile.Pop();
 
@@ -53,7 +53,7 @@ public class Processor
     /// </summary>
     /// <param name="player"><see cref="Player"/> that the cards will be added to.</param>
     /// <param name="amount">Amount of cards that need to be drawn.</param>
-    private void DrawCards(Player player, int amount)
+    public void DrawCards(Player player, int amount)
     {
         for (int i = 0; i < amount; i++)
         {
@@ -69,7 +69,7 @@ public class Processor
     /// <summary>
     /// Moves the current player to the last space in the player list.
     /// </summary>
-    private void NextPlayer()
+    public void NextPlayer()
     {
         _game.Players.Enqueue(_game.Players.Dequeue());
     }
@@ -77,7 +77,7 @@ public class Processor
     /// <summary>
     /// Reverses the player list.
     /// </summary>
-    private void ReversePlayers()
+    public void ReversePlayers()
     {
         _game.Players = new Queue<Player>(_game.Players.Reverse());
     }
@@ -85,7 +85,7 @@ public class Processor
     /// <summary>
     /// Randomizes the player order.
     /// </summary>
-    private void ShufflePlayers()
+    public void ShufflePlayers()
     {
         _game.Players = new Queue<Player>(_game.Players.OrderBy(_ => new Random().Next()));
     }
