@@ -36,12 +36,9 @@ public class UsersController : ControllerBase
     private static bool Authenticated(HttpRequest r) =>
         r.Headers["Authed"] != StringValues.Empty && bool.Parse(r.Headers["Authed"].ToString());
 
-    private static bool IsUrl(string url)
-    {
-        Uri? uriResult;
-        return Uri.TryCreate(url, UriKind.Absolute, out uriResult) &&
-               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-    }
+    private static bool IsUrl(string url) => Uri.TryCreate(url, UriKind.Absolute, out Uri? uriResult) &&
+                                             (uriResult.Scheme == Uri.UriSchemeHttp ||
+                                              uriResult.Scheme == Uri.UriSchemeHttps);
 
     #endregion
 
@@ -58,14 +55,12 @@ public class UsersController : ControllerBase
             return Unauthorized(ErrorMessage("You need to be logged in to use this route."));
         }
 
-        Database db = new();
+        User? user = Users.Get(id);
 
-        if (!db.Users.Any(u => u.Id == id))
+        if (user == null)
         {
             return NotFound(ErrorMessage("Specified user was not found."));
         }
-
-        User user = db.Users.First(u => u.Id == id);
 
         return Ok(user);
     }
@@ -82,23 +77,22 @@ public class UsersController : ControllerBase
             return Unauthorized(ErrorMessage("You need to be logged in to use this route."));
         }
 
-        Database db = new();
-
         if (!IsUrl(profileImage))
         {
             return BadRequest(ErrorMessage("URL is not an image."));
         }
 
-        if (!db.Users.Any(u => u.Id == id))
+        User? user = Users.Get(id);
+
+        if (user == null)
         {
             return NotFound(ErrorMessage("Specified user was not found."));
         }
 
-        User dbUser = db.Users.First(u => u.Id == id);
-        dbUser.ProfileImage = profileImage;
-        db.SaveChangesAsync();
+        user.ProfileImage = profileImage;
+        Users.Update(user);
 
-        return Ok(dbUser);
+        return Ok(user);
     }
 
     [HttpDelete]
@@ -112,16 +106,14 @@ public class UsersController : ControllerBase
             return Unauthorized(ErrorMessage("You need to be logged in to use this route."));
         }
 
-        Database db = new();
+        User? user = Users.Get(id);
 
-        if (!db.Users.Any(u => u.Id == id))
+        if (user == null)
         {
             return NotFound(ErrorMessage("Specified user was not found."));
         }
 
-        User user = db.Users.First(u => u.Id == id);
-
-        db.Users.Remove(user);
+        Users.Remove(user.Id);
 
         return Ok();
     }

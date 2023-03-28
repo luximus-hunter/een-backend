@@ -99,21 +99,24 @@ public class GamesHub : Hub
             {
                 game.Running = false;
 
-                Database db = new();
-
                 foreach (Player p in game.Players)
                 {
                     try
                     {
-                        User user = db.Users.First(u => u.Id == p.Id);
+                        User? user = Users.Get(p.Id);
 
-                        if (p.Cards.Count < 1)
+                        if (user != null)
                         {
-                            user.Wins++;
-                        }
-                        else
-                        {
-                            user.Loses++;
+                            if (p.Cards.Count < 1)
+                            {
+                                user.Wins++;
+                            }
+                            else
+                            {
+                                user.Loses++;
+                            }
+
+                            Users.Update(user);
                         }
                     }
                     catch
@@ -121,8 +124,6 @@ public class GamesHub : Hub
                         // user is a guest
                     }
                 }
-
-                await db.SaveChangesAsync();
 
                 await Group(r.GameId).SendAsync("Move", new MoveResponse(true, "Success", game).ToString());
                 await Group(r.GameId).SendAsync("Win",

@@ -24,16 +24,15 @@ public class AuthMiddleware
         {
             try
             {
+                // TODO: Validation    
                 string? json = JwtBuilder.Create()
                     .WithAlgorithm(new NoneAlgorithm())
                     .Decode(t);
 
                 Token? token = JsonConvert.DeserializeObject<Token>(json);
 
-                Database db = new();
-                
                 if (token == null) return;
-                if (!db.Users.Any(u => u.Username == token.User.Username && u.Password == token.User.Password)) return;
+                if (Users.Get(token.User.Username, token.User.Password) == null) return;
 
                 authed = true;
             }
