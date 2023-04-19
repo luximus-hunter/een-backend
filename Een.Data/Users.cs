@@ -8,21 +8,21 @@ public static class Users
     {
         Database db = new();
 
-        return db.Users.FirstOrDefault(u => u != null && u.Id == id, null);
+        return db.Users.First(u => u.Id == id);
     }
 
     public static User? Get(string username)
     {
         Database db = new();
 
-        return db.Users.FirstOrDefault(u => u != null && u.Username == username, null);
+        return db.Users.First(u => u.Username == username);
     }
 
     public static User? Get(string username, string password)
     {
         Database db = new();
 
-        return db.Users.FirstOrDefault(u => u != null && u.Username == username && u.Password == password, null);
+        return db.Users.First(u => u.Username == username && u.Password == password);
     }
 
     public static bool Add(User user)
@@ -44,7 +44,7 @@ public static class Users
     {
         Database db = new();
 
-        User? dbUser = db.Users.FirstOrDefault(u => u != null && u.Id == user.Id, null);
+        User? dbUser = Get(user.Id);
 
         if (dbUser == null)
         {
@@ -67,7 +67,7 @@ public static class Users
     {
         Database db = new();
 
-        User? user = db.Users.FirstOrDefault(u => u != null && u.Id == id, null);
+        User? user = Get(id);
 
         if (user == null)
         {
